@@ -16,6 +16,10 @@ let height;
 let timeLimit;
 let printed = false;
 
+// get data from galaxies
+// http://voyages.sdss.org/launch/milky-way/sdss-constellations/discovering-constellations-using-sdss-plates/
+let data;
+
 // Make the paper scope global, by injecting it into window:
 paper.install(window);
 window.onload = function () {
@@ -39,15 +43,60 @@ window.onload = function () {
   ///////////////////////
 
   var voronoi = new Voronoi();
-  var sites = generatePoints(100);
-  // console.log(sites[0]);
-  var bbox, diagram;
+  var sites, bbox, diagram;
   var oldSize = paper.view.size;
-  var spotColor = new Color("red");
+  var spotColor = new Color("skyblue");
   var mousePos = view.center;
-  var selected = true;
+  var selected = false;
 
-  onResize();
+  // get the data
+
+  const parser = Papa.parse("../data/results-100.csv", {
+    download: true,
+    header: true,
+    skipEmptyLines: "greedy",
+    complete: function (results, file) {
+      data = results.data;
+      // console.log("Parsing complete:", results, file);
+
+      // all x
+      // const xes = data.map((d) => d.x);
+      // const yes = data.map((d) => d.y);
+      // console.log("xes", Math.max(...xes));
+
+      onResize();
+    },
+  });
+
+  function onResize() {
+    sites = generatePoints(data);
+    var margin = 20;
+    bbox = {
+      xl: margin,
+      xr: width - margin,
+      yt: margin,
+      yb: height - margin,
+    };
+    for (var i = 0, l = sites.length; i < l; i++) {
+      // console.log(sites[i]);
+      sites[i] = sites[i].multiply(view.size).divide(oldSize);
+    }
+    oldSize = view.size;
+    renderDiagram();
+    sites.forEach((site) => makeCircle(site));
+  }
+
+  function generatePoints(points) {
+    let sites = points.map(
+      (point) =>
+        // new Point(Math.floor(Math.abs(point.x)), Math.floor(Math.abs(point.y)))
+        new Point(
+          Math.floor(mapRange(point.x, -360, 360, 0, width)),
+          Math.floor(mapRange(point.y, -360, 360, 0, height))
+        )
+    );
+    return sites;
+  }
 
   function renderDiagram() {
     project.activeLayer.children = [];
@@ -72,25 +121,10 @@ window.onload = function () {
     }
   }
 
-  function generatePoints(number) {
-    let points = [];
-
-    for (let i = 0; i < number; i++) {
-      let point = new Point(
-        Math.floor(Math.random() * width),
-        Math.floor(Math.random() * height)
-      );
-
-      points.push(point);
-    }
-
-    return points;
-  }
-
   function createPath(points, center) {
     var path = new Path();
     if (!selected) {
-      path.fillColor = spotColor;
+      path.strokeColor = spotColor;
     } else {
       path.fullySelected = selected;
     }
@@ -112,20 +146,13 @@ window.onload = function () {
     return path;
   }
 
-  function onResize() {
-    var margin = 20;
-    bbox = {
-      xl: margin,
-      xr: width - margin,
-      yt: margin,
-      yb: height - margin,
-    };
-    for (var i = 0, l = sites.length; i < l; i++) {
-      // console.log(sites[i]);
-      sites[i] = sites[i].multiply(view.size).divide(oldSize);
-    }
-    oldSize = view.size;
-    renderDiagram();
+  function makeCircle(point) {
+    var path = new Path.Circle({
+      center: [point.x, point.y],
+      radius: 2,
+      fillColor: "red",
+      // selected: true,
+    });
   }
 
   paper.view.onMouseMove = function (event) {};
@@ -174,7 +201,7 @@ window.onload = function () {
 
   //Listen for SHIFT-P to save content as SVG file.
   t.onKeyUp = function (event) {
-    if (event.character == "P") {
+    if (event.character == "s") {
       print();
     }
   };
@@ -212,3 +239,11 @@ Math.radians = function (degrees) {
 Math.degrees = function (radians) {
   return (radians * 180) / Math.PI;
 };
+
+// linearly maps value from the range (a..b) to (c..d)
+function mapRange(value, a, b, c, d) {
+  // first map value from (a..b) to (0..1)
+  value = (value - a) / (b - a);
+  // then map it from (0..1) to (c..d) and return it
+  return c + value * (d - c);
+}
