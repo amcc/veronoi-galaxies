@@ -8,7 +8,6 @@ let textX = 50;
 let textY = 50;
 let lineWidth = 1;
 
-let margin = 50;
 let bottomMargin = 100;
 let width;
 let height;
@@ -33,8 +32,6 @@ window.onload = function () {
   width = paper.view.size.width;
   height = paper.view.size.height;
 
-  // console.log("paper size", width, height);
-
   path = new Path();
   path.visible = false;
 
@@ -42,12 +39,22 @@ window.onload = function () {
   // VERONOI FUNCTIONS //
   ///////////////////////
 
-  var voronoi = new Voronoi();
-  var sites, bbox, diagram;
-  var oldSize = paper.view.size;
-  var spotColor = new Color("skyblue");
-  var mousePos = view.center;
-  var selected = false;
+  let voronoi = new Voronoi();
+  let sites, diagram;
+  let margin = 20;
+  let bbox = {
+    xl: margin,
+    xr: width - margin,
+    yt: margin,
+    yb: height - margin,
+  };
+  let oldSize = paper.view.size;
+  let strokeColor = new Color("white");
+  let fillColor = new Color("skyblue");
+  let circleSize = 5;
+
+  let mousePos = view.center;
+  let selected = false;
 
   // get the data
 
@@ -70,15 +77,8 @@ window.onload = function () {
 
   function onResize() {
     sites = generatePoints(data);
-    var margin = 20;
-    bbox = {
-      xl: margin,
-      xr: width - margin,
-      yt: margin,
-      yb: height - margin,
-    };
-    for (var i = 0, l = sites.length; i < l; i++) {
-      // console.log(sites[i]);
+
+    for (let i = 0, l = sites.length; i < l; i++) {
       sites[i] = sites[i].multiply(view.size).divide(oldSize);
     }
     oldSize = view.size;
@@ -100,20 +100,36 @@ window.onload = function () {
 
   function renderDiagram() {
     project.activeLayer.children = [];
-    var diagram = voronoi.compute(sites, bbox);
-    // console.log("sites", sites);
+    let diagram = voronoi.compute(sites, bbox);
     if (diagram) {
-      for (var i = 0, l = sites.length; i < l; i++) {
-        var cell = diagram.cells[sites[i].voronoiId];
+      for (let i = 0; i < sites.length; i++) {
+        let cell = diagram.cells[sites[i].voronoiId];
         if (cell) {
-          var halfedges = cell.halfedges,
+          let halfedges = cell.halfedges,
             length = halfedges.length;
           if (length > 2) {
-            var points = [];
-            for (var j = 0; j < length; j++) {
+            let points = [];
+            for (let j = 0; j < length; j++) {
               v = halfedges[j].getEndpoint();
+
+              const shift = 0;
+              if (
+                v.x <= bbox.xl + shift ||
+                v.x >= bbox.xr - shift ||
+                v.y <= bbox.yt + shift ||
+                v.y >= bbox.yb - shift
+              ) {
+                // continue;
+              }
               points.push(new Point(v));
             }
+            // if (
+            //   (point.x !== bbox.xl &&
+            //     point.x !== bbox.xr &&
+            //     point.y !== bbox.yt &&
+            //     point.y !== bbox.yb) ||
+            //   all === true
+            // )
             createPath(points, sites[i]);
           }
         }
@@ -122,18 +138,20 @@ window.onload = function () {
   }
 
   function createPath(points, center) {
-    var path = new Path();
+    let path = new Path();
     if (!selected) {
-      path.strokeColor = spotColor;
+      path.strokeColor = strokeColor;
+      path.fillColor = fillColor;
     } else {
       path.fullySelected = selected;
     }
     path.closed = true;
 
-    for (var i = 0, l = points.length; i < l; i++) {
-      var point = points[i];
-      var next = points[i + 1 == points.length ? 0 : i + 1];
-      var vector = next.subtract(point).divide(2);
+    for (let i = 0, l = points.length; i < l; i++) {
+      let point = points[i];
+      let next = points[i + 1 == points.length ? 0 : i + 1];
+      let vector = next.subtract(point).divide(2);
+
       path.add({
         // point: point.add(vector),
         point: point,
@@ -147,10 +165,10 @@ window.onload = function () {
   }
 
   function makeCircle(point) {
-    var path = new Path.Circle({
+    let path = new Path.Circle({
       center: [point.x, point.y],
-      radius: 2,
-      fillColor: "red",
+      radius: circleSize,
+      fillColor: strokeColor,
       // selected: true,
     });
   }
@@ -158,12 +176,9 @@ window.onload = function () {
   paper.view.onMouseMove = function (event) {};
 
   paper.view.onFrame = function (event) {
-    // console.log("event.time", event.time);
-    // console.log("timeLimit", timeLimit);
     // if (event.time < timeLimit) {
     // within time limit
     // } else if (!printed) {
-    //   console.log("print, disabled for now");
     //print();
     //   printed = true;
     // }
@@ -182,16 +197,16 @@ window.onload = function () {
     let date = Date.now();
     console.log(date);
     if (!fileName) {
-      fileName = `rain-${svgCount}-${date}.svg`;
+      fileName = `galaxy-${svgCount}-${date}.svg`;
     }
 
-    var url =
+    let url =
       "data:image/svg+xml;utf8," +
       encodeURIComponent(
         paper.project.exportSVG({ bounds: "view", asString: true })
       );
 
-    var link = document.createElement("a");
+    let link = document.createElement("a");
     link.download = fileName;
     link.href = url;
     link.click();
@@ -214,7 +229,6 @@ window.onload = function () {
 
   // now draw
   paper.view.draw();
-  // console.log("rain count:", svgCount);
 };
 // end of printing/svg functions
 
