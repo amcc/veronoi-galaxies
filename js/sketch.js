@@ -39,7 +39,7 @@ window.onload = function () {
   ///////////////////////
 
   var voronoi = new Voronoi();
-  var sites = generatePoints(10);
+  var sites = generatePoints(100);
   // console.log(sites[0]);
   var bbox, diagram;
   var oldSize = paper.view.size;
@@ -84,12 +84,6 @@ window.onload = function () {
       points.push(point);
     }
 
-    for (let i = 0; i < number; i++) {
-      let point = Math.random() * width;
-
-      points.push(point);
-    }
-
     return points;
   }
 
@@ -104,10 +98,8 @@ window.onload = function () {
 
     for (var i = 0, l = points.length; i < l; i++) {
       var point = points[i];
-      console.log("point", point);
       var next = points[i + 1 == points.length ? 0 : i + 1];
       var vector = next.subtract(point).divide(2);
-      console.log(next, vector);
       path.add({
         // point: point.add(vector),
         point: point,
@@ -116,7 +108,6 @@ window.onload = function () {
       });
     }
     // path.scale(0.95);
-    console.log("path", path);
     // removeSmallBits(path);
     return path;
   }
@@ -129,10 +120,10 @@ window.onload = function () {
       yt: margin,
       yb: height - margin,
     };
-    // for (var i = 0, l = sites.length; i < l; i++) {
-    //   sites[i] = (sites[i] * view.size) / oldSize;
-    // }
-    // console.log(sites);
+    for (var i = 0, l = sites.length; i < l; i++) {
+      // console.log(sites[i]);
+      sites[i] = sites[i].multiply(view.size).divide(oldSize);
+    }
     oldSize = view.size;
     renderDiagram();
   }
