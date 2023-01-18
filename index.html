@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+    <!-- Load the Veronoi library from here: https://github.com/gorhill/Javascript-Voronoi -->
+    <script type="text/javascript" src="js/rhill-voronoi-core.min.js"></script>
+    <!-- Load the Paper.js library -->
+    <script type="text/javascript" src="js/paper.js"></script>
+    <!-- Load external PaperScript and associate it with myCanvas -->
+    <script
+      type="text/javascript"
+      src="js/sketch.js"
+      canvas="myCanvas"
+      hidpi="off"
+    ></script>
+  </head>
+  <body>
+    <div class="container">
+      <canvas id="myCanvas" resize></canvas>
+    </div>
+  </body>
+</html>
