@@ -58,7 +58,7 @@ window.onload = function () {
 
   // get the data
 
-  const parser = Papa.parse("../data/results-100.csv", {
+  const parser = Papa.parse("data/results-100.csv", {
     download: true,
     header: true,
     skipEmptyLines: "greedy",
