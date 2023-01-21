@@ -49,7 +49,7 @@ window.onload = function () {
     yb: height - margin,
   };
   let oldSize = paper.view.size;
-  let strokeColor = new Color("white");
+  let strokeColor = new Color("black");
   let fillColor = new Color("skyblue");
   let circleSize = 5;
 
@@ -58,7 +58,7 @@ window.onload = function () {
 
   // get the data
 
-  const parser = Papa.parse("data/results-100.csv", {
+  const parser = Papa.parse("data/results-1000.csv", {
     download: true,
     header: true,
     skipEmptyLines: "greedy",
