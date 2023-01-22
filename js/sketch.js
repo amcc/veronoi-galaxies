@@ -30,8 +30,8 @@ let speed = 0.001;
 let animating = false;
 
 let stroke = "#333333";
-let circle = "gold";
-let circleSize = 3;
+let circle = "white";
+let circleSize = 2;
 
 // get data from galaxies
 // http://voyages.sdss.org/launch/milky-way/sdss-constellations/discovering-constellations-using-sdss-plates/
@@ -212,7 +212,7 @@ window.onload = function () {
             if (make) {
               let cellPath = createPath(points, sites[i]);
               veronoiGroup.addChild(cellPath);
-              let grey = mapRange(cellPath.bounds.area, 0, 3000, 0, 1);
+              let grey = mapRange(Math.sqrt(cellPath.bounds.area), 0, 70, 0, 1);
               cellPath.fillColor = new Color(
                 1 - grey * 2,
                 1 - grey * 5,
