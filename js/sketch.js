@@ -15,9 +15,11 @@ let height;
 let timeLimit;
 let printed = false;
 
+let zDepth = 0.05;
+let zStart = 0.8;
+
 // get data from galaxies
 // http://voyages.sdss.org/launch/milky-way/sdss-constellations/discovering-constellations-using-sdss-plates/
-let data;
 
 // Make the paper scope global, by injecting it into window:
 paper.install(window);
@@ -58,25 +60,24 @@ window.onload = function () {
 
   // get the data
 
-  const parser = Papa.parse("data/results-1000.csv", {
+  const parser = Papa.parse("data/10475/results.csv", {
     download: true,
     header: true,
     skipEmptyLines: "greedy",
     complete: function (results, file) {
-      data = results.data;
-      // console.log("Parsing complete:", results, file);
-
       // all x
       // const xes = data.map((d) => d.x);
       // const yes = data.map((d) => d.y);
       // console.log("xes", Math.max(...xes));
 
-      onResize();
+      gotData(results.data);
     },
   });
 
-  function onResize() {
+  function gotData(data) {
+    console.log(data);
     sites = generatePoints(data);
+    // console.log(sites);
 
     for (let i = 0, l = sites.length; i < l; i++) {
       sites[i] = sites[i].multiply(view.size).divide(oldSize);
@@ -87,15 +88,32 @@ window.onload = function () {
   }
 
   function generatePoints(points) {
-    let sites = points.map(
-      (point) =>
-        // new Point(Math.floor(Math.abs(point.x)), Math.floor(Math.abs(point.y)))
-        new Point(
-          Math.floor(mapRange(point.x, -360, 360, 0, width)),
-          Math.floor(mapRange(point.y, -360, 360, 0, height))
-        )
-    );
+    let sites = points.reduce((acc, curr) => {
+      // console.log(point);
+      // new Point(Math.floor(Math.abs(point.x)), Math.floor(Math.abs(point.y)))
+
+      //remove stars
+
+      if (curr.class !== "STAR" && zRange(curr.z)) {
+        acc.push(
+          new Point(
+            Math.floor(mapRange(curr.x, -360, 360, 0, width)),
+            Math.floor(mapRange(curr.y, -360, 360, 0, height))
+          )
+        );
+      }
+      return acc;
+    }, []);
+    console.log("sites", sites);
     return sites;
+  }
+
+  function zRange(z) {
+    if (z >= zStart && z < zDepth + zStart) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   function renderDiagram() {
