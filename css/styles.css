@@ -29,7 +29,7 @@ a {
 
 button {
   font-family: "IBM Plex Mono", sans-serif;
-  background-color: skyblue;
+  background-color: black;
   width: calc(
     min(calc(var(--size) * 1vw), calc(var(--size) * 1vh)) -
       calc(var(--margin) * 2px)
@@ -37,6 +37,13 @@ button {
   padding: 2px;
   border-radius: 0.5em;
   margin-top: 0.5em;
+  color: white;
+  /* outline: white; */
+  border: 1px solid white;
+}
+button:hover {
+  background-color: white;
+  color: black;
 }
 
 label {
