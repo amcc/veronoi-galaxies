@@ -1,6 +1,14 @@
 :root {
-  --size: 80;
-  --margin: 20;
+  --size: 95;
+  --margin: 10;
+}
+
+/* min width media query */
+@media (min-width: 600px) {
+  :root {
+    --size: 80;
+    --margin: 20;
+  }
 }
 
 html,
@@ -46,7 +54,7 @@ section {
 }
 #slice {
   /* width: 100vw; */
-  /* padding: calc(var(--margin) * 1px); */
+  padding: calc(var(--margin) * 1px);
 }
 /* Scale canvas with resize attribute to full size */
 .container {
@@ -54,7 +62,7 @@ section {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: top;
   align-items: center;
 }
 .text-container {

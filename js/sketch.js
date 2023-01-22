@@ -27,7 +27,7 @@ let zStart = 0.0;
 let zEnd = 1.5;
 let forwards = true;
 let speed = 0.001;
-let animating = true;
+let animating = false;
 
 let stroke = "#333333";
 let circle = "gold";
@@ -43,6 +43,7 @@ window.onload = function () {
   paper.setup("myCanvas");
 
   const zSlider = document.querySelector("#slider");
+  zStart = Number(zSlider.value);
   const zStartText = document.querySelector("#zStart");
   zSlider.addEventListener("input", (event) => {
     sliderEvent(event);
@@ -181,6 +182,7 @@ window.onload = function () {
     if (diagram) {
       for (let i = 0; i < sites.length; i++) {
         let cell = diagram.cells[sites[i].voronoiId];
+        let make = true;
         if (cell) {
           let halfedges = cell.halfedges,
             length = halfedges.length;
@@ -196,7 +198,7 @@ window.onload = function () {
                 v.y <= bbox.yt + shift ||
                 v.y >= bbox.yb - shift
               ) {
-                // continue;
+                make = false;
               }
               points.push(new Point(v));
             }
@@ -207,14 +209,16 @@ window.onload = function () {
             //     point.y !== bbox.yb) ||
             //   all === true
             // )
-            let cellPath = createPath(points, sites[i]);
-            veronoiGroup.addChild(cellPath);
-            let grey = mapRange(cellPath.bounds.area, 0, 3000, 0, 1);
-            cellPath.fillColor = new Color(
-              1 - grey * 2,
-              1 - grey * 5,
-              1 - grey
-            );
+            if (make) {
+              let cellPath = createPath(points, sites[i]);
+              veronoiGroup.addChild(cellPath);
+              let grey = mapRange(cellPath.bounds.area, 0, 3000, 0, 1);
+              cellPath.fillColor = new Color(
+                1 - grey * 2,
+                1 - grey * 5,
+                1 - grey
+              );
+            }
           }
         }
       }
@@ -230,7 +234,6 @@ window.onload = function () {
       path.fullySelected = selected;
     }
     path.closed = true;
-    // path.parent(veronoiGroup);
 
     for (let i = 0, l = points.length; i < l; i++) {
       let point = points[i];
@@ -238,7 +241,7 @@ window.onload = function () {
       let vector = next.subtract(point).divide(2);
 
       path.add({
-        // point: point.add(vector),
+        point: point.add(vector),
         point: point,
         handleIn: -vector,
         handleOut: vector,
