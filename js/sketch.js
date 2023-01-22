@@ -11,12 +11,27 @@ let lineWidth = 1;
 let bottomMargin = 100;
 let width;
 let height;
+let margin = parseFloat(
+  getComputedStyle(document.documentElement).getPropertyValue("--margin")
+);
 
 let timeLimit;
 let printed = false;
 
-let zDepth = 0.05;
-let zStart = 0.8;
+let veronoiGroup, uiGroup;
+let rangeRect;
+
+let data;
+let zDepth = 0.4;
+let zStart = 0.0;
+let zEnd = 1.5;
+let forwards = true;
+let speed = 0.001;
+let animating = true;
+
+let stroke = "#333333";
+let circle = "gold";
+let circleSize = 3;
 
 // get data from galaxies
 // http://voyages.sdss.org/launch/milky-way/sdss-constellations/discovering-constellations-using-sdss-plates/
@@ -27,6 +42,40 @@ window.onload = function () {
   // Setup directly from canvas id:
   paper.setup("myCanvas");
 
+  const zSlider = document.querySelector("#slider");
+  const zStartText = document.querySelector("#zStart");
+  zSlider.addEventListener("input", (event) => {
+    sliderEvent(event);
+  });
+
+  const depthSlider = document.querySelector("#depth");
+  const zDepthText = document.querySelector("#zDepth");
+  depthSlider.addEventListener("input", (event) => {
+    depthEvent(event);
+  });
+
+  const animationControl = document.querySelector("#animation");
+  animationControl.addEventListener("click", (event) => {
+    animating = !animating;
+
+    animating
+      ? (event.target.textContent = "Stop animation")
+      : (event.target.textContent = "Start animation");
+  });
+
+  depthSlider.value = zDepthText.textContent = zDepth;
+
+  function sliderEvent(event) {
+    zStart = Number(event.target.value);
+    zStartText.textContent = event.target.value;
+    animating = false;
+  }
+
+  function depthEvent(event) {
+    zDepth = Number(event.target.value);
+    zDepthText.textContent = event.target.value;
+  }
+
   // timelimit
   // timeLimit = Math.random() * 20 + 20;
   timeLimit = 1;
@@ -34,8 +83,20 @@ window.onload = function () {
   width = paper.view.size.width;
   height = paper.view.size.height;
 
-  path = new Path();
-  path.visible = false;
+  // rangeRect = new Path.Rectangle({
+  //   x: margin,
+  //   y: 1,
+  //   width: width - margin * 2,
+  //   height: 10,
+  //   strokeColor: "transparent",
+  //   strokeWidth: 1,
+  //   fillColor: "red",
+  // });
+
+  veronoiGroup = new Group();
+  veronoiGroup.position = view.center;
+  // uiGroup = new Group();
+  // uiGroup.addChild(rangeRect);
 
   ///////////////////////
   // VERONOI FUNCTIONS //
@@ -43,17 +104,11 @@ window.onload = function () {
 
   let voronoi = new Voronoi();
   let sites, diagram;
-  let margin = 20;
-  let bbox = {
-    xl: margin,
-    xr: width - margin,
-    yt: margin,
-    yb: height - margin,
-  };
+  let bbox;
   let oldSize = paper.view.size;
-  let strokeColor = new Color("black");
-  let fillColor = new Color("skyblue");
-  let circleSize = 5;
+  let strokeColor = new Color(stroke);
+  let circleColor = new Color(circle);
+  let fillColor = new Color("black");
 
   let mousePos = view.center;
   let selected = false;
@@ -70,26 +125,30 @@ window.onload = function () {
       // const yes = data.map((d) => d.y);
       // console.log("xes", Math.max(...xes));
 
-      gotData(results.data);
+      data = results.data;
+      gotData();
     },
   });
 
-  function gotData(data) {
-    console.log(data);
+  function gotData() {
+    bbox = {
+      xl: margin,
+      xr: width - margin,
+      yt: margin,
+      yb: height - margin,
+    };
     sites = generatePoints(data);
-    // console.log(sites);
 
-    for (let i = 0, l = sites.length; i < l; i++) {
-      sites[i] = sites[i].multiply(view.size).divide(oldSize);
-    }
-    oldSize = view.size;
+    // for (let i = 0, l = sites.length; i < l; i++) {
+    //   sites[i] = sites[i].multiply(view.size).divide(oldSize);
+    // }
+    // oldSize = view.size;
     renderDiagram();
     sites.forEach((site) => makeCircle(site));
   }
 
   function generatePoints(points) {
     let sites = points.reduce((acc, curr) => {
-      // console.log(point);
       // new Point(Math.floor(Math.abs(point.x)), Math.floor(Math.abs(point.y)))
 
       //remove stars
@@ -104,12 +163,12 @@ window.onload = function () {
       }
       return acc;
     }, []);
-    console.log("sites", sites);
+    // console.log("sites", sites);
     return sites;
   }
 
   function zRange(z) {
-    if (z >= zStart && z < zDepth + zStart) {
+    if (z >= zStart - zDepth / 2 && z < zStart + zDepth / 2) {
       return true;
     } else {
       return false;
@@ -117,7 +176,7 @@ window.onload = function () {
   }
 
   function renderDiagram() {
-    project.activeLayer.children = [];
+    veronoiGroup.children = [];
     let diagram = voronoi.compute(sites, bbox);
     if (diagram) {
       for (let i = 0; i < sites.length; i++) {
@@ -148,7 +207,14 @@ window.onload = function () {
             //     point.y !== bbox.yb) ||
             //   all === true
             // )
-            createPath(points, sites[i]);
+            let cellPath = createPath(points, sites[i]);
+            veronoiGroup.addChild(cellPath);
+            let grey = mapRange(cellPath.bounds.area, 0, 3000, 0, 1);
+            cellPath.fillColor = new Color(
+              1 - grey * 2,
+              1 - grey * 5,
+              1 - grey
+            );
           }
         }
       }
@@ -159,11 +225,12 @@ window.onload = function () {
     let path = new Path();
     if (!selected) {
       path.strokeColor = strokeColor;
-      path.fillColor = fillColor;
+      path.fillColor = "red";
     } else {
       path.fullySelected = selected;
     }
     path.closed = true;
+    // path.parent(veronoiGroup);
 
     for (let i = 0, l = points.length; i < l; i++) {
       let point = points[i];
@@ -186,7 +253,8 @@ window.onload = function () {
     let path = new Path.Circle({
       center: [point.x, point.y],
       radius: circleSize,
-      fillColor: strokeColor,
+      fillColor: circleColor,
+      parent: veronoiGroup,
       // selected: true,
     });
   }
@@ -194,16 +262,29 @@ window.onload = function () {
   paper.view.onMouseMove = function (event) {};
 
   paper.view.onFrame = function (event) {
-    // if (event.time < timeLimit) {
-    // within time limit
-    // } else if (!printed) {
-    //print();
-    //   printed = true;
-    // }
+    if (animating) {
+      zStartText.textContent = zStart.toFixed(3);
+      if (forwards) {
+        zStart += speed;
+      } else {
+        zStart -= speed;
+      }
+      if (zStart > 1.5) {
+        forwards = false;
+      } else if (zStart < 0) {
+        forwards = true;
+      }
+      slider.value = zStart;
+    }
+    if (data) {
+      gotData();
+    }
   };
 
   paper.view.onResize = function (resizeAmount) {
-    onResize();
+    width = paper.view.size.width;
+    height = paper.view.size.height;
+    gotData();
   };
 
   /////////////////////
@@ -213,7 +294,7 @@ window.onload = function () {
   // start of printing/svg functions
   function downloadAsSVG(fileName) {
     let date = Date.now();
-    console.log(date);
+    // console.log(date);
     if (!fileName) {
       fileName = `galaxy-${svgCount}-${date}.svg`;
     }
@@ -241,7 +322,7 @@ window.onload = function () {
 
   function print() {
     // pendulumLayer.remove(); // this prevents the redCircle from being drawn
-    path.smooth();
+    // path.smooth();
     downloadAsSVG();
   }
 
