@@ -25,6 +25,7 @@ let data;
 let zDepth = 0.4;
 let zStart = 0.0;
 let zEnd = 1.5;
+let area = 100;
 let forwards = true;
 let speed = 0.001;
 let animating = false;
@@ -45,14 +46,32 @@ window.onload = function () {
   const zSlider = document.querySelector("#slider");
   zStart = Number(zSlider.value);
   const zStartText = document.querySelector("#zStart");
-  zSlider.addEventListener("input", (event) => {
-    sliderEvent(event);
-  });
-
   const depthSlider = document.querySelector("#depth");
   const zDepthText = document.querySelector("#zDepth");
+  const areaSlider = document.querySelector("#area");
+  const areaText = document.querySelector("#areaValue");
+  const startNumber = document.querySelector("#start-number");
+  const depthNumber = document.querySelector("#depth-number");
+  const areaNumber = document.querySelector("#area-number");
+
+  zSlider.addEventListener("input", (event) => {
+    redShiftEvent(event);
+  });
+
   depthSlider.addEventListener("input", (event) => {
     depthEvent(event);
+  });
+
+  startNumber.addEventListener("input", (event) => {
+    redShiftEvent(event);
+  });
+
+  depthNumber.addEventListener("input", (event) => {
+    depthEvent(event);
+  });
+
+  areaSlider.addEventListener("input", (event) => {
+    areaEvent(event);
   });
 
   const animationControl = document.querySelector("#animation");
@@ -66,15 +85,28 @@ window.onload = function () {
 
   depthSlider.value = zDepthText.textContent = zDepth;
 
-  function sliderEvent(event) {
-    zStart = Number(event.target.value);
-    zStartText.textContent = event.target.value;
+  function redShiftEvent(event) {
+    const eVal = event.target.value;
+    zStart = Number(eVal);
+    zStartText.textContent = eVal;
+    startNumber.value = eVal;
     animating = false;
   }
 
   function depthEvent(event) {
-    zDepth = Number(event.target.value);
-    zDepthText.textContent = event.target.value;
+    const eVal = event.target.value;
+    zDepth = Number(eVal);
+    zDepthText.textContent = eVal;
+    depthNumber.value = eVal;
+    animating = false;
+  }
+
+  function areaEvent(event) {
+    const eVal = event.target.value;
+    area = Number(eVal);
+    areaText.textContent = eVal;
+    areaNumber.value = eVal;
+    animating = false;
   }
 
   // timelimit
@@ -145,7 +177,7 @@ window.onload = function () {
     // }
     // oldSize = view.size;
     renderDiagram();
-    sites.forEach((site) => makeCircle(site));
+    // sites.forEach((site) => makeCircle(site));
   }
 
   function generatePoints(points) {
@@ -210,14 +242,21 @@ window.onload = function () {
             //   all === true
             // )
             if (make) {
-              let cellPath = createPath(points, sites[i]);
+              const cellPath = createPath(points, sites[i]);
               veronoiGroup.addChild(cellPath);
-              let grey = mapRange(Math.sqrt(cellPath.bounds.area), 0, 70, 0, 1);
+              const rootArea = Math.sqrt(cellPath.bounds.area);
+
+              let grey = mapRange(rootArea, 0, 70, 0, 1);
               cellPath.fillColor = new Color(
                 1 - grey * 2,
                 1 - grey * 5,
                 1 - grey
               );
+              if (rootArea > area) {
+                cellPath.visible = false;
+              } else {
+                makeCircle(sites[i]);
+              }
             }
           }
         }
@@ -299,7 +338,7 @@ window.onload = function () {
     let date = Date.now();
     // console.log(date);
     if (!fileName) {
-      fileName = `galaxy-${svgCount}-${date}.svg`;
+      fileName = `darkmatter-zStart-${zStart}-zDepth-${zDepth}.svg`;
     }
 
     let url =
