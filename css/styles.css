@@ -53,7 +53,8 @@ section {
   padding-bottom: 2em;
 }
 #slider,
-#depth {
+#depth,
+#area {
   width: calc(
     min(calc(var(--size) * 1vw), calc(var(--size) * 1vh)) -
       calc(var(--margin) * 2px)
@@ -61,7 +62,7 @@ section {
 }
 #slice {
   /* width: 100vw; */
-  padding: calc(var(--margin) * 1px);
+  /* padding: calc(var(--margin) * 1px); */
 }
 /* Scale canvas with resize attribute to full size */
 .container {
@@ -108,4 +109,14 @@ canvas[resize] {
 }
 #info a {
   color: gray;
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
