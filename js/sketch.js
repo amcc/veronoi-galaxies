@@ -338,7 +338,7 @@ window.onload = function () {
     let date = Date.now();
     // console.log(date);
     if (!fileName) {
-      fileName = `darkmatter-zStart-${zStart}-zDepth-${zDepth}.svg`;
+      fileName = `darkmatter-redShift-${zStart}-sliceDepth-${zDepth}-area-${area}.svg`;
     }
 
     let url =
